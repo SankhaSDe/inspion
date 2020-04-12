@@ -1,0 +1,18 @@
+cd D:\inspion\udpserver
+D:\inspion\udpserver> python -m venv venv
+D:\inspion\udpserver> cd venv
+D:\inspion\udpserver\venv> cd Scripts
+D:\inspion\udpserver\venv\Scripts> activate
+(venv) D:\inspion\udpserver\venv\Scripts> cd ../..
+(venv) D:\inspion\udpserver> pip install -r requirements.txt
+
+Server:
+=========
+(venv) D:\inspion\udpserver> python run.py
+
+Test:
+=========
+(venv) D:\inspion\udpserver\tests> pytest -v
+
+
+
