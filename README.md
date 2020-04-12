@@ -1,2 +1,2 @@
 # inspion
-Code Ripository for inspion mobility project
+Code repository for inspion mobility project
