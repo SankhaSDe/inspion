@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../')
+sys.path.extend(['.','../','../../'])
 
 import socket
 import json
@@ -13,7 +13,10 @@ SERVER_UDP_PORT = 9999
 LOCAL_UDP_IP = "127.0.0.1"
 LOCAL_UDP_PORT = 10001
 
-payload_01 = json.dumps([1,0,111111111111,185185133,185185134,1234567891])
+payload_01 = {
+                'mt': mt.ClientToServer_INIT_CLIENT,
+                'msg': [1, 1234567890, 185185133, 185185133, '0.0.0.0', 0, 1234567890, 765430]
+             }
 
 @pytest.fixture
 def sock():
@@ -21,6 +24,13 @@ def sock():
     sock.bind((LOCAL_UDP_IP, LOCAL_UDP_PORT))
     return sock
 
+
 def test_send_first_message(sock):
-    print('dummy')
-    pass
+    payload = json.dumps(payload_01)
+    sock.sendto(payload.encode(), (SERVER_UDP_IP, SERVER_UDP_PORT))
+    sock.settimeout(5)
+    data, address = sock.recvfrom(4096)
+    data_recvd = json.loads(data.decode())
+    print('Data received:', data_recvd)
+    assert data_recvd["mt"] == mt.ServerToClient_INIT_CLIENT_ACK
+    assert payload_01["msg"][1] == data_recvd["msg"][0][1]

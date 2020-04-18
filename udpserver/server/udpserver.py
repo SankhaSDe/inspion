@@ -47,6 +47,7 @@ class ServerProtocol:
         """
         try:
             client_ip, client_port, data_in = addr[0], addr[1], json.loads(data.decode())
+            debug(f'Received data[datagram_received] - {data_in}')
             self.handle_message(client_ip, client_port, data_in)
             # # [2] update internal data and search neatby peer clients
             # ip_list, msg = handle_message(client_ip, client_port, data_in)
@@ -103,7 +104,7 @@ class ServerProtocol:
             else:
                     raise Exception(f'invalid message type{msg_type}')
         except Exception as ex:
-            error(f'Exception[handle_message] - {ex}')
+            exception(f'Exception[handle_message] - {ex}')
 
     def send(self, ip, port, data):
         try:
@@ -137,6 +138,7 @@ async def main_loop():
     """
     This is the main thread which starts the UDP listner thread, then sleeps in background
     """
+    print(f'***** Starting UDP server *****')
     debug(f'***** Starting UDP server *****')
     # Get a reference to the event loop as we are using low-level APIs.
     loop = asyncio.get_running_loop()
