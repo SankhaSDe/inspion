@@ -47,7 +47,7 @@ class ServerProtocol:
         """
         try:
             client_ip, client_port, data_in = addr[0], addr[1], json.loads(data.decode())
-            debug(f'Received data[datagram_received] - {data_in}')
+            debug(f'received data[datagram_received] - {data_in}')
             self.handle_message(client_ip, client_port, data_in)
             # # [2] update internal data and search neatby peer clients
             # ip_list, msg = handle_message(client_ip, client_port, data_in)
@@ -66,7 +66,7 @@ class ServerProtocol:
             msg_type = data['mt']
             msg = data['msg']
 
-            if (msg_type == mt.ClientToServer_INIT_CLIENT):
+            if msg_type == mt.ClientToServer_INIT_CLIENT:
                 # [1] update internal data
                 local_data.insert(ctype=msg[0], cid=msg[1], lat=msg[2], lon=msg[3],
                                     ip=client_ip, port=client_port, update=msg[6], udp=us.UDP_UNKNOWN)
@@ -76,22 +76,23 @@ class ServerProtocol:
                 data_out = json.dumps({'mt': mt.ServerToClient_INIT_CLIENT_ACK, 'msg': search_result})
                 self.send(ip=client_ip, port=client_port, data=data_out)
                 # [4] send update to peers
+                data_out = json.dumps({'mt': mt.ServerToClient_NEW_CLIENT_ADDED, 'msg': search_result})
                 for item in search_result:
                     self.send(ip=item[4], port=item[5], data=data_out)
 
-            elif (msg_type == mt.ClientToServer_INIT_CLIENT_DONE):
+            elif msg_type == mt.ClientToServer_INIT_CLIENT_DONE:
                 # [1] update internal data
                 local_data.insert(ctype=msg[0], cid=msg[1], lat=msg[2], lon=msg[3],
-                                    ip=client_ip, port=client_port, update=msg[6], udp=us.UDP_ENABLED)
+                                  ip=client_ip, port=client_port, update=msg[6], udp=us.UDP_ENABLED)
 
-            elif (msg_type == mt.ClientToServer_UPDATE_LOCATION):
+            elif msg_type == mt.ClientToServer_UPDATE_LOCATION:
                 # [1] update internal data
                 local_data.insert(ctype=msg[0], cid=msg[1], lat=msg[2], lon=msg[3],
-                                    ip=client_ip, port=client_port, update=msg[6], udp=us.UDP_ENABLED)
+                                  ip=client_ip, port=client_port, update=msg[6], udp=us.UDP_ENABLED)
                 # [2] search near-by
-                search_result = local_data.search(lat=msg[2],lon=msg[3])
+                search_result = local_data.search(lat=msg[2], lon=msg[3])
                 # [3] send reply back to client
-                data_out = json.dumps({'mt': mt.ServerToClient_INIT_CLIENT_ACK, 'msg': search_result})
+                data_out = json.dumps({'mt': mt.ServerToClient_UPDATE_LOCATION_ACK, 'msg': search_result})
                 self.send(ip=client_ip, port=client_port, data=data_out)
 
             elif (msg_type == mt.ServerToClient_INIT_CLIENT_ACK
@@ -108,7 +109,8 @@ class ServerProtocol:
 
     def send(self, ip, port, data):
         try:
-            self.transport.sendto(data.encode(),(ip,port))
+            debug(f'sending message to {ip},{port},{data}')
+            self.transport.sendto(data.encode(), (ip, port))
         except Exception as ex:
             exception(f'Exception[send] - {ex}')
 
@@ -138,8 +140,8 @@ async def main_loop():
     """
     This is the main thread which starts the UDP listner thread, then sleeps in background
     """
-    print(f'***** Starting UDP server *****')
-    debug(f'***** Starting UDP server *****')
+    print(f'***** Starting UDP server[{BINDING_IP},{BINDING_PORT}] *****')
+    debug(f'***** Starting UDP server[{BINDING_IP},{BINDING_PORT}] *****')
     # Get a reference to the event loop as we are using low-level APIs.
     loop = asyncio.get_running_loop()
     # One protocol instance will be created to serve all client requests.
@@ -148,8 +150,8 @@ async def main_loop():
                                     local_addr=(BINDING_IP, BINDING_PORT))
     try:
         while RUN_SERVER:
-            local_data.clean() # wakeup and cleanup old data
-            await asyncio.sleep(3600) # value in seconds
+            local_data.clean()  # wakeup and cleanup old data
+            await asyncio.sleep(3600)  # value in seconds
     finally:
         transport.close()
 
